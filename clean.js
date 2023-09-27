@@ -1,3 +1,5 @@
+'use strict';
+
 class Item {
   constructor(value, description, user) {
     this.value = value;
@@ -7,7 +9,7 @@ class Item {
   }
 }
 
-const budget = [
+const budget = Object.freeze([
   new Item(250, 'Sold old TV 📺', 'jonas'),
   new Item(-45, 'Groceries 🥑', 'jonas'),
   new Item(3500, 'Monthly salary 👩‍💻', 'jonas'),
@@ -16,38 +18,42 @@ const budget = [
   new Item(-20, 'Candy 🍭', 'matilda'),
   new Item(-125, 'Toys 🚂', 'matilda'),
   new Item(-1800, 'New Laptop 💻', 'jonas'),
-];
+]);
 
-const spendingLimits = {
+const spendingLimits = Object.freeze({
   jonas: 1500,
   matilda: 100,
-};
+}); // Make the object immutable (just the first level of it, inside elements can still be modified)
 
-const getLimit = user => spendingLimits?.[user] ?? 0;
+const getLimit = (user, limits) => limits?.[user] ?? 0;
 
-function addExpense(value, description, user = 'jonas') {
+function addExpense(state, limits, value, description, user = 'jonas') {
   user = user.toLowerCase();
-  if (value <= getLimit(user)) budget.push(new Item(-value, description, user));
+  if (value <= getLimit(user, limits))
+    return [...state, new Item(-value, description, user)];
+  return state;
 }
 
-function checkExpenses() {
-  budget.forEach(el => {
-    if (el.value < -getLimit(el.user)) el.flag = 'limit';
-  });
+function checkExpenses(state, limits) {
+  return state.map(el =>
+    el.value < -getLimit(el.user, limits) ? { ...el, flag: 'limit' } : el
+  );
 }
 
-function logBigExpenses(limit) {
-  const output = budget
-    .map(el => (el.value <= -limit ? `${el.description.slice(-2)} / ` : ''))
-    .join('')
-    .slice(0, -2);
-  console.log(output);
+function logBigExpenses(state, limit) {
+  console.log(
+    state
+      .filter(el => el.value <= -limit)
+      .map(el => el.description.slice(-2))
+      .join(' / ')
+  );
 }
 
-addExpense(10, 'Pizza 🍕');
-addExpense(100, 'Going to movies 🍿', 'Matilda');
-addExpense(200, 'Stuff', 'Jay');
-console.log(budget);
-checkExpenses();
-console.log(budget);
-logBigExpenses(1000);
+const budget1 = addExpense(budget, spendingLimits, 10, 'Pizza 🍕');
+// prettier-ignore
+const budget2 = addExpense(budget1, spendingLimits, 100, 'Going to movies 🍿', 'Matilda');
+const budget3 = addExpense(budget2, spendingLimits, 200, 'Stuff', 'Jay');
+console.log(budget3);
+const finalBudget = checkExpenses(budget3, spendingLimits);
+console.log(finalBudget);
+logBigExpenses(finalBudget, 1000);
