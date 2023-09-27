@@ -1,64 +1,53 @@
-var budget = [
-  { value: 250, description: 'Sold old TV 📺', user: 'jonas' },
-  { value: -45, description: 'Groceries 🥑', user: 'jonas' },
-  { value: 3500, description: 'Monthly salary 👩‍💻', user: 'jonas' },
-  { value: 300, description: 'Freelancing 👩‍💻', user: 'jonas' },
-  { value: -1100, description: 'New iPhone 📱', user: 'jonas' },
-  { value: -20, description: 'Candy 🍭', user: 'matilda' },
-  { value: -125, description: 'Toys 🚂', user: 'matilda' },
-  { value: -1800, description: 'New Laptop 💻', user: 'jonas' },
+class Item {
+  constructor(value, description, user) {
+    this.value = value;
+    this.description = description;
+    this.user = user;
+    this.flag = null;
+  }
+}
+
+const budget = [
+  new Item(250, 'Sold old TV 📺', 'jonas'),
+  new Item(-45, 'Groceries 🥑', 'jonas'),
+  new Item(3500, 'Monthly salary 👩‍💻', 'jonas'),
+  new Item(300, 'Freelancing 👩‍💻', 'jonas'),
+  new Item(-1100, 'New iPhone 📱', 'jonas'),
+  new Item(-20, 'Candy 🍭', 'matilda'),
+  new Item(-125, 'Toys 🚂', 'matilda'),
+  new Item(-1800, 'New Laptop 💻', 'jonas'),
 ];
 
-var limits = {
+const spendingLimits = {
   jonas: 1500,
   matilda: 100,
 };
 
-var add = function (value, description, user) {
-  if (!user) user = 'jonas';
+const getLimit = user => spendingLimits?.[user] ?? 0;
+
+function addExpense(value, description, user = 'jonas') {
   user = user.toLowerCase();
+  if (value <= getLimit(user)) budget.push(new Item(-value, description, user));
+}
 
-  var lim;
-  if (limits[user]) {
-    lim = limits[user];
-  } else {
-    lim = 0;
-  }
+function checkExpenses() {
+  budget.forEach(el => {
+    if (el.value < -getLimit(el.user)) el.flag = 'limit';
+  });
+}
 
-  if (value <= lim) {
-    budget.push({ value: -value, description: description, user: user });
-  }
-};
-add(10, 'Pizza 🍕');
-add(100, 'Going to movies 🍿', 'Matilda');
-add(200, 'Stuff', 'Jay');
-console.log(budget);
-
-var check = function () {
-  for (var el of budget) {
-    var lim;
-    if (limits[el.user]) {
-      lim = limits[el.user];
-    } else {
-      lim = 0;
-    }
-
-    if (el.value < -lim) {
-      el.flag = 'limit';
-    }
-  }
-};
-check();
-
-console.log(budget);
-
-var bigExpenses = function (limit) {
-  var output = '';
-  for (var el of budget) {
-    if (el.value <= -limit) {
-      output += el.description.slice(-2) + ' / '; // Emojis are 2 chars
-    }
-  }
-  output = output.slice(0, -2); // Remove last '/ '
+function logBigExpenses(limit) {
+  const output = budget
+    .map(el => (el.value <= -limit ? `${el.description.slice(-2)} / ` : ''))
+    .join('')
+    .slice(0, -2);
   console.log(output);
-};
+}
+
+addExpense(10, 'Pizza 🍕');
+addExpense(100, 'Going to movies 🍿', 'Matilda');
+addExpense(200, 'Stuff', 'Jay');
+console.log(budget);
+checkExpenses();
+console.log(budget);
+logBigExpenses(1000);
